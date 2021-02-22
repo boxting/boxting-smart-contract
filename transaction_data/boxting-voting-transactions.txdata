@@ -1,0 +1,58 @@
+[
+    {
+        "transactionName": "boxtingVotingExists",
+        "transactionLabel": "A test boxtingVotingExists transaction",
+        "arguments": [
+            "001"
+        ],
+        "transientData": {}
+    },
+    {
+        "transactionName": "createBoxtingVoting",
+        "transactionLabel": "A test createBoxtingVoting transaction",
+        "arguments": [
+            "001"
+        ],
+        "transientData": {
+            "privateValue": "some value"
+        }
+    },
+    {
+        "transactionName": "readBoxtingVoting",
+        "transactionLabel": "A test readBoxtingVoting transaction",
+        "arguments": [
+            "001"
+        ],
+        "transientData": {}
+    },
+    {
+        "transactionName": "updateBoxtingVoting",
+        "transactionLabel": "A test updateBoxtingVoting transaction",
+        "arguments": [
+            "001"
+        ],
+        "transientData": {
+            "privateValue": "some other value"
+        }
+    },
+    {
+        "transactionName": "deleteBoxtingVoting",
+        "transactionLabel": "A test deleteBoxtingVoting transaction",
+        "arguments": [
+            "001"
+        ],
+        "transientData": {}
+    },
+    {
+        "transactionName": "verifyBoxtingVoting",
+        "transactionLabel": "A test verifyBoxtingVoting transaction",
+        "arguments":[
+            "Org1MSP",
+            "001",
+            {
+                "privateValue": "some other value"
+            }
+        ],
+        "transientData": {}
+    }
+]
