@@ -5,6 +5,9 @@ import { VotableItem } from './votable-item';
 export class Vote {
 
     @Property()
+    public id: string
+
+    @Property()
     public electionId: string;
 
     @Property()
@@ -17,6 +20,7 @@ export class Vote {
     public type: string;
 
     constructor(voterId: string, electionId: string) {
+        this.id = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         this.voterId = voterId
         this.electionId = electionId
         this.selectedCandidates = []
