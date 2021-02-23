@@ -2,7 +2,7 @@ import { Object, Property, } from 'fabric-contract-api';
 import { VotableItem } from './votable-item';
 
 @Object()
-export class Voter {
+export class Vote {
 
     @Property()
     public electionId: string;
