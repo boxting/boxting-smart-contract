@@ -2,13 +2,14 @@ import { Context, Contract, Info, Returns, Transaction } from "fabric-contract-a
 import { Election } from "./classes/election";
 import { Event } from "./classes/event";
 import { VotableItem } from "./classes/votable-item";
+import { Vote } from "./classes/vote";
 import { Voter } from "./classes/voter";
 import { InitData, VoterData, JsonResponse } from "./interfaces/interfaces";
 
 @Info({ title: 'BoxtingContract', description: 'Smart contract for boxting voting solution.' })
 export class BoxtingContract extends Contract {
 
-    @Transaction(true)
+    @Transaction()
     @Returns('boolean')
     public async initContract(ctx: Context, initData: InitData): Promise<boolean> {
 
@@ -26,7 +27,7 @@ export class BoxtingContract extends Contract {
         let event = new Event(eventData.id, eventData.startDate, eventData.endDate)
         let eventBuffer: Buffer = Buffer.from(JSON.stringify(event))
 
-        await ctx.stub.putState(event.id, eventBuffer)
+        await ctx.stub.putState(`event-${event.id}`, eventBuffer)
 
         // Create the elections
         let electionList = initData.elections
@@ -39,7 +40,7 @@ export class BoxtingContract extends Contract {
             )
 
             let electionBuffer: Buffer = Buffer.from(JSON.stringify(election))
-            await ctx.stub.putState(election.id, electionBuffer)
+            await ctx.stub.putState(`election-${election.id}`, electionBuffer)
         });
 
         // Create the candidates
@@ -54,18 +55,18 @@ export class BoxtingContract extends Contract {
             )
 
             let candidateBuffer: Buffer = Buffer.from(JSON.stringify(candidate))
-            await ctx.stub.putState(candidate.id, candidateBuffer)
+            await ctx.stub.putState(`candidate-${candidate.id}`, candidateBuffer)
         });
 
         return true
     }
 
-    @Transaction(true)
+    @Transaction()
     @Returns('boolean')
     public async createVoter(ctx: Context, voterData: VoterData): Promise<boolean> {
 
         // Check if a user with the same id is already registered
-        const data: Uint8Array = await ctx.stub.getState(voterData.id)
+        const data: Uint8Array = await ctx.stub.getState(`voter-${voterData.id}`)
 
         if (!!data && data.length > 0) {
             throw new Error(`A voter with the id ${voterData.id} already exists`)
@@ -74,7 +75,7 @@ export class BoxtingContract extends Contract {
         let voter = new Voter(voterData.id, voterData.firstName, voterData.lastName)
         let voterBuffer: Buffer = Buffer.from(JSON.stringify(voter))
 
-        await ctx.stub.putState(voter.id, voterBuffer)
+        await ctx.stub.putState(`voter-${voter.id}`, voterBuffer)
 
         return true
     }
@@ -93,6 +94,57 @@ export class BoxtingContract extends Contract {
 
         const candidate: VotableItem = JSON.parse(data.toString()) as VotableItem;
         return candidate;
+    }
+
+    @Transaction(false)
+    @Returns('Vote')
+    public async readVote(ctx: Context, electionId: string, voterId: string): Promise<Vote> {
+
+
+        // Check if election with the id exists
+        const electionExist: boolean = await this.checkIfExists(ctx, `election-${electionId}`)
+        if (!electionExist) {
+            throw new Error(`The election ${electionId} does not exists`);
+        }
+
+        // Check if voter with the id exists
+        const voterExist: boolean = await this.checkIfExists(ctx, `voter-${voterId}`)
+        if (!voterExist) {
+            throw new Error(`The voter ${voterId} does not exists`);
+        }
+
+        // Get the voter
+        const voterData: Uint8Array = await ctx.stub.getState(`voter-${voterId}`);
+        const voter: Voter = JSON.parse(voterData.toString()) as Voter;
+
+        if (voter.votedElectionIds.length == 0) {
+            throw new Error(`The voter has not voted yet`);
+        }
+
+        // Create query to get the vote
+        const queryString = {
+            selector: {
+                electionId: electionId,
+                voterId: voterId
+            }
+        };
+
+        // Get the results
+        const queryResults = await this.queryWithQueryString(ctx, JSON.stringify(queryString));
+
+        const votes: Vote[] = JSON.parse(queryResults)
+
+        if (!votes || votes.length == 0) {
+            throw new Error('The voter has not voted yet on this election.')
+        }
+
+        return votes[0];
+    }
+
+
+    private async checkIfExists(ctx: Context, id: string): Promise<boolean> {
+        const data: Uint8Array = await ctx.stub.getState(id);
+        return (!!data && data.length > 0);
     }
 
     private async queryWithQueryString(ctx: Context, queryString: string): Promise<string> {
