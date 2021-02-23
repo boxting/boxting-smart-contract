@@ -97,7 +97,6 @@ export class BoxtingContract extends Contract {
         return true
     }
 
-    
 
     /**
      * Get the information of a specific candidate
@@ -134,7 +133,6 @@ export class BoxtingContract extends Contract {
 
         return JSON.stringify(candidate);
     }
-
 
 
     /**
@@ -180,7 +178,6 @@ export class BoxtingContract extends Contract {
 
         return candidates
     }
-
 
 
     /**
