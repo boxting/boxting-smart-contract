@@ -8,6 +8,6 @@ import { Object, Property } from 'fabric-contract-api';
 export class BoxtingVoting {
 
     @Property()
-    public privateValue: string;
+    public value: string;
 
 }

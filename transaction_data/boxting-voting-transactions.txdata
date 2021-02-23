@@ -11,11 +11,10 @@
         "transactionName": "createBoxtingVoting",
         "transactionLabel": "A test createBoxtingVoting transaction",
         "arguments": [
-            "001"
+            "001",
+            "some value"
         ],
-        "transientData": {
-            "privateValue": "some value"
-        }
+        "transientData": {}
     },
     {
         "transactionName": "readBoxtingVoting",
@@ -29,29 +28,16 @@
         "transactionName": "updateBoxtingVoting",
         "transactionLabel": "A test updateBoxtingVoting transaction",
         "arguments": [
-            "001"
+            "001",
+            "some other value"
         ],
-        "transientData": {
-            "privateValue": "some other value"
-        }
+        "transientData": {}
     },
     {
         "transactionName": "deleteBoxtingVoting",
         "transactionLabel": "A test deleteBoxtingVoting transaction",
         "arguments": [
             "001"
-        ],
-        "transientData": {}
-    },
-    {
-        "transactionName": "verifyBoxtingVoting",
-        "transactionLabel": "A test verifyBoxtingVoting transaction",
-        "arguments":[
-            "Org1MSP",
-            "001",
-            {
-                "privateValue": "some other value"
-            }
         ],
         "transientData": {}
     }
