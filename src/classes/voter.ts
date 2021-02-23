@@ -18,15 +18,11 @@ export class Voter {
     @Property()
     public votedElectionIds: String[];
 
-    @Property()
-    public votesCompleted: boolean;
-
     constructor(voterId: string, firstName: string, lastName: string) {
         this.id = voterId
         this.firstName = firstName
         this.lastName = lastName
         this.votedElectionIds = []
-        this.votesCompleted = false
         this.type = 'voter'
     }
 

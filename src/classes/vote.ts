@@ -19,11 +19,11 @@ export class Vote {
     @Property()
     public type: string;
 
-    constructor(voterId: string, electionId: string) {
+    constructor(voterId: string, electionId: string, selectedCandidates: VotableItem[]) {
         this.id = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         this.voterId = voterId
         this.electionId = electionId
-        this.selectedCandidates = []
+        this.selectedCandidates = selectedCandidates
         this.type = 'vote'
     }
 }

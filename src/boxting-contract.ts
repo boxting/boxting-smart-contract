@@ -118,7 +118,7 @@ export class BoxtingContract extends Contract {
         const event = await this.validateInit(ctx)
 
         // Check if a candidate with the id exists
-        const data: Uint8Array = await ctx.stub.getState(candidateId)
+        const data: Uint8Array = await ctx.stub.getState(`candidate-${candidateId}`)
         const exists: boolean = (!!data && data.length > 0)
 
         if (!exists) {
@@ -133,9 +133,9 @@ export class BoxtingContract extends Contract {
             throw new Error('The event has not finished yet, cannot get results')
         }
 
-        const candidate: VotableItem = JSON.parse(data.toString()) as VotableItem;
+        const candidate = data.toString();
 
-        return JSON.stringify(candidate);
+        return candidate;
     }
 
 
@@ -241,6 +241,137 @@ export class BoxtingContract extends Contract {
         return JSON.stringify(votes[0]);
     }
 
+
+    /**
+     * Emit a new vote on a election activity
+     * 
+     * @param {Context} ctx the transaction context
+     * @param {string} electionId the id of the election 
+     * @param {string} voterId the id of the voter
+     * @param {string} candidateIds the list of candidate ids as a string
+     * 
+     * @returns {boolean} true if the vote is correctly saved
+     */
+    @Transaction()
+    @Returns('boolean')
+    public async emitVote(ctx: Context, electionId: string, voterId: string, candidateIds: string): Promise<boolean> {
+
+        const event = await this.validateInit(ctx)
+
+        // Check if event is avaliable for voting
+        const endDate = event.endDate
+        const startDate = event.startDate
+        const currentDate = Date.now()
+
+        if (currentDate < startDate.getTime() || currentDate >= endDate.getTime()) {
+            throw new Error('The event is not avaliable for voting')
+        }
+
+        // Check if election exist
+        const electionData: Uint8Array = await ctx.stub.getState(`election-${electionId}`)
+        const electionExist: boolean = (!!electionData && electionData.length > 0)
+
+        if (!electionExist) {
+            throw new Error(`The election ${electionId} does not exists`);
+        }
+
+        // Check if voter exist
+        const voterData: Uint8Array = await ctx.stub.getState(`voter-${voterId}`)
+        const voterExist = (!!voterData && voterData.length > 0)
+
+        if (!voterExist) {
+            throw new Error(`The voter ${voterId} does not exists`)
+        }
+
+        // Get the election and voter
+        const election: Election = JSON.parse(electionData.toString()) as Election
+        const voter: Voter = JSON.parse(voterData.toString()) as Voter
+
+        // Check if the voter has already voted for this election
+        if (voter.votedElectionIds.indexOf(election.id) != -1) {
+            throw new Error(`The voter has already voted for the election ${election.id}`)
+        }
+
+        // Parse the candidate list to a votable id list
+        const votableIds: string[] = JSON.parse(candidateIds)
+
+        // Check if sent candidates are the same as max candidates
+        if (votableIds.length != election.maxVotes) {
+            throw new Error(`The number of candidates sent is not the same as the required for the election`)
+        }
+
+        // Create a votable list
+        const votables: VotableItem[] = []
+        for (let i = 0; i < votableIds.length; i++) {
+
+            // Check if a candidate with the id exists
+            const data: Uint8Array = await ctx.stub.getState(`candidate-${votableIds[i]}`)
+            const exists: boolean = (!!data && data.length > 0)
+
+            if (!exists) {
+                throw new Error(`A candidate with the id ${votableIds[i]} does not exists`)
+            }
+
+            let votableItem = JSON.parse(data.toString()) as VotableItem
+            votables.push(votableItem)
+        }
+
+        /* Vote Execution */
+        // Update the voter voted elections with the election id
+        voter.votedElectionIds.push(election.id)
+        await ctx.stub.putState(`voter-${voter.id}`, Buffer.from(JSON.stringify(voter)))
+
+        // Create new vote
+        const vote: Vote = new Vote(
+            voter.id,
+            election.id,
+            votables
+        )
+        await ctx.stub.putState(`vote-${vote.id}`, Buffer.from(JSON.stringify(vote)))
+
+        return true
+    }
+
+
+    /**
+     * Check if a voter already emited a vote for specific election
+     * 
+     * @param {Context} ctx the transaction context
+     * @param {string} electionId the id of the election 
+     * @param {string} voterId the id of the voter
+     * 
+     * @returns {boolean} true if the voter already voted, false otherwise
+     */
+    @Transaction(false)
+    @Returns('boolean')
+    public async checkVoteElection(ctx: Context, electionId: string, voterId: string): Promise<boolean> {
+
+        // Check if election exist
+        const electionData: Uint8Array = await ctx.stub.getState(`election-${electionId}`)
+        const electionExist: boolean = (!!electionData && electionData.length > 0)
+
+        if (!electionExist) {
+            throw new Error(`The election ${electionId} does not exists`);
+        }
+
+        // Check if voter exist
+        const voterData: Uint8Array = await ctx.stub.getState(`voter-${voterId}`)
+        const voterExist = (!!voterData && voterData.length > 0)
+
+        if (!voterExist) {
+            throw new Error(`The voter ${voterId} does not exists`)
+        }
+
+        // Get the election and voter
+        const election: Election = JSON.parse(electionData.toString()) as Election
+        const voter: Voter = JSON.parse(voterData.toString()) as Voter
+
+        // Check if the voter has already voted for this election
+        if (voter.votedElectionIds.indexOf(election.id) != -1) {
+            return true
+        }
+        return false
+    }
 
     ////// PRIVATE FUNCTIONS //////
 
