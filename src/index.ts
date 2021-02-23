@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { BoxtingVotingContract } from './boxting-voting-contract';
-export { BoxtingVotingContract } from './boxting-voting-contract';
+import { BoxtingContract } from './boxting-contract';
+export { BoxtingContract } from './boxting-contract';
 
-export const contracts: any[] = [ BoxtingVotingContract ];
+export const contracts: any[] = [BoxtingContract];
