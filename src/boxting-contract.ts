@@ -19,9 +19,11 @@ export class BoxtingContract extends Contract {
      */
     @Transaction()
     @Returns('boolean')
-    public async initContract(ctx: Context, initData: InitData): Promise<boolean> {
+    public async initContract(ctx: Context, initDataStr: string): Promise<boolean> {
 
         console.log('Init contract method called')
+
+        const initData: InitData = JSON.parse(initDataStr)
 
         // Validate if an event already exists, meaning contract was already initiated
         const existingEvent: Event[] = JSON.parse(await this.queryByObjectType(ctx, 'event'));
@@ -80,7 +82,9 @@ export class BoxtingContract extends Contract {
      */
     @Transaction()
     @Returns('boolean')
-    public async createVoter(ctx: Context, voterData: VoterData): Promise<boolean> {
+    public async createVoter(ctx: Context, voterDataStr: string): Promise<boolean> {
+
+        const voterData: VoterData = JSON.parse(voterDataStr)
 
         // Check if a user with the same id is already registered
         const data: Uint8Array = await ctx.stub.getState(`voter-${voterData.id}`)
@@ -89,8 +93,8 @@ export class BoxtingContract extends Contract {
             throw new Error(`A voter with the id ${voterData.id} already exists`)
         }
 
-        let voter = new Voter(voterData.id, voterData.firstName, voterData.lastName)
-        let voterBuffer: Buffer = Buffer.from(JSON.stringify(voter))
+        const voter = new Voter(voterData.id, voterData.firstName, voterData.lastName)
+        const voterBuffer: Buffer = Buffer.from(JSON.stringify(voter))
 
         await ctx.stub.putState(`voter-${voter.id}`, voterBuffer)
 
