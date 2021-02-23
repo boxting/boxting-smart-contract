@@ -9,6 +9,14 @@ import { InitData, VoterData, JsonResponse } from "./interfaces/interfaces";
 @Info({ title: 'BoxtingContract', description: 'Smart contract for boxting voting solution.' })
 export class BoxtingContract extends Contract {
 
+    /**
+     * Set the initial data of the contract, this transaction can only be executed once.
+     * 
+     * @param {Context} ctx the transaction context
+     * @param {InitData} initData the inital data containing the event, the elections and the candidates
+     * 
+     * @returns {boolean} true if the init is successfully accomplished
+     */
     @Transaction()
     @Returns('boolean')
     public async initContract(ctx: Context, initData: InitData): Promise<boolean> {
@@ -16,7 +24,7 @@ export class BoxtingContract extends Contract {
         console.log('Init contract method called')
 
         // Validate if an event already exists, meaning contract was already initiated
-        const existingEvent: Event[] = JSON.parse(await this.queryByObjectType(ctx, 'election'));
+        const existingEvent: Event[] = JSON.parse(await this.queryByObjectType(ctx, 'event'));
 
         if (existingEvent && existingEvent.length > 0) {
             throw new Error('The boxting contract has already been initiated');
@@ -61,6 +69,15 @@ export class BoxtingContract extends Contract {
         return true
     }
 
+
+    /**
+     * Creates a new user for the contract
+     * 
+     * @param {Context} ctx the transaction context
+     * @param {VoterData} voterData the data of the voter including the dni as id, first and last name
+     * 
+     * @returns {boolean} true if the creation is successfully accomplished
+     */
     @Transaction()
     @Returns('boolean')
     public async createVoter(ctx: Context, voterData: VoterData): Promise<boolean> {
@@ -80,9 +97,22 @@ export class BoxtingContract extends Contract {
         return true
     }
 
+    
+
+    /**
+     * Get the information of a specific candidate
+     * 
+     * @param {Context} ctx the transaction context
+     * @param {string} candidateId the id of the candidate you want the get the information
+     * 
+     * @returns {string} Returns the candidate data as a json string
+     */
     @Transaction(false)
-    @Returns('VotableItem')
-    public async readCandidate(ctx: Context, candidateId: string): Promise<VotableItem> {
+    @Returns('string')
+    public async readCandidate(ctx: Context, candidateId: string): Promise<string> {
+
+        // Validate init
+        const event = await this.validateInit(ctx)
 
         // Check if a candidate with the id exists
         const data: Uint8Array = await ctx.stub.getState(candidateId)
@@ -92,14 +122,82 @@ export class BoxtingContract extends Contract {
             throw new Error(`A candidate with the id ${candidateId} does not exists`)
         }
 
+        // Check if event has finished
+        const endDate = event.endDate
+        const currentDate = Date.now()
+
+        if (currentDate < endDate.getTime()) {
+            throw new Error('The event has not finished yet, cannot get results')
+        }
+
         const candidate: VotableItem = JSON.parse(data.toString()) as VotableItem;
-        return candidate;
+
+        return JSON.stringify(candidate);
     }
 
-    @Transaction(false)
-    @Returns('Vote')
-    public async readVote(ctx: Context, electionId: string, voterId: string): Promise<Vote> {
 
+
+    /**
+     * Get the results of an specific election
+     * 
+     * @param {Context} ctx the transaction context
+     * @param electionId 
+     * 
+     * @returns a list containing all candidates that participated on the election as a string
+     */
+    @Transaction(false)
+    @Returns('string')
+    public async getElectionResults(ctx: Context, electionId: string): Promise<string> {
+
+        // Validate init
+        const event = await this.validateInit(ctx)
+
+        // Check if election exists
+        const electionExists: boolean = await this.checkIfExists(ctx, `election-${electionId}`)
+
+        if (!electionExists) {
+            throw new Error(`The election ${electionId} does not exists`)
+        }
+
+        // Check if event has finished
+        const endDate = event.endDate
+        const currentDate = Date.now()
+
+        if (currentDate < endDate.getTime()) {
+            throw new Error('The event has not finished yet, cannot get results')
+        }
+
+        // Create query to get the candidates
+        const queryString = {
+            selector: {
+                electionId: electionId,
+                type: 'votable'
+            }
+        };
+
+        // Get the results
+        const candidates = await this.queryWithQueryString(ctx, JSON.stringify(queryString));
+
+        return candidates
+    }
+
+
+
+    /**
+     * Transaction to get the vote of a user on a specific election
+     * 
+     * @param {Context} ctx the transaction context
+     * @param {string} electionId the id of the election 
+     * @param {string} voterId the id of the voter
+     * 
+     * @returns the vote object including a list of the selected candidates for the election.
+     */
+    @Transaction(false)
+    @Returns('string')
+    public async readVote(ctx: Context, electionId: string, voterId: string): Promise<string> {
+
+        // Validate init
+        await this.validateInit(ctx)
 
         // Check if election with the id exists
         const electionExist: boolean = await this.checkIfExists(ctx, `election-${electionId}`)
@@ -125,7 +223,8 @@ export class BoxtingContract extends Contract {
         const queryString = {
             selector: {
                 electionId: electionId,
-                voterId: voterId
+                voterId: voterId,
+                type: 'vote'
             }
         };
 
@@ -138,9 +237,23 @@ export class BoxtingContract extends Contract {
             throw new Error('The voter has not voted yet on this election.')
         }
 
-        return votes[0];
+        return JSON.stringify(votes[0]);
     }
 
+
+    ////// PRIVATE FUNCTIONS //////
+
+    private async validateInit(ctx: Context): Promise<Event> {
+        // Validate if an event already exists, meaning contract was already initiated
+        const existingEvent: Event[] = JSON.parse(await this.queryByObjectType(ctx, 'event'));
+
+        if (!existingEvent || existingEvent.length == 0) {
+            throw new Error('The boxting contract has not been initiated');
+        }
+
+        // If initiated, return the current event
+        return existingEvent[0]
+    }
 
     private async checkIfExists(ctx: Context, id: string): Promise<boolean> {
         const data: Uint8Array = await ctx.stub.getState(id);
