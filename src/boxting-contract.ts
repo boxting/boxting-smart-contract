@@ -20,55 +20,60 @@ export class BoxtingContract extends Contract {
     @Transaction()
     @Returns('boolean')
     public async initContract(ctx: Context, initDataStr: string): Promise<boolean> {
+        try {
+            console.log('Init contract method called')
 
-        console.log('Init contract method called')
+            const initData: InitData = JSON.parse(initDataStr)
 
-        const initData: InitData = JSON.parse(initDataStr)
+            // Validate if an event already exists, meaning contract was already initiated
+            const existingEvent: Event[] = JSON.parse(await this.queryByObjectType(ctx, 'event'));
 
-        // Validate if an event already exists, meaning contract was already initiated
-        const existingEvent: Event[] = JSON.parse(await this.queryByObjectType(ctx, 'event'));
+            if (existingEvent && existingEvent.length > 0) {
+                throw new Error('The boxting contract has already been initiated');
+            }
 
-        if (existingEvent && existingEvent.length > 0) {
-            throw new Error('The boxting contract has already been initiated');
+            // Create the new Event
+            let eventData = initData.event
+            let event = new Event(eventData.id, eventData.startDate, eventData.endDate)
+            let eventBuffer: Buffer = Buffer.from(JSON.stringify(event))
+
+            await ctx.stub.putState(`event-${event.id}`, eventBuffer)
+
+            // Create the elections
+            let electionList = initData.elections
+
+            for (let i = 0; i < electionList.length; i++) {
+                const elem = electionList[i]
+
+                let election = new Election(
+                    elem.id, elem.eventId,
+                    elem.electionType, elem.maxVotes
+                )
+
+                let electionBuffer: Buffer = Buffer.from(JSON.stringify(election))
+                await ctx.stub.putState(`election-${election.id}`, electionBuffer)
+            }
+
+            // Create the candidates
+            let candidateList = initData.candidates
+
+            for (let i = 0; i < candidateList.length; i++) {
+                const elem = candidateList[i]
+
+                let candidate = new VotableItem(
+                    elem.id, elem.electionId,
+                    elem.firstName, elem.lastName,
+                    elem.imageUrl
+                )
+
+                let candidateBuffer: Buffer = Buffer.from(JSON.stringify(candidate))
+                await ctx.stub.putState(`candidate-${candidate.id}`, candidateBuffer)
+            }
+
+            return Promise.resolve(true)
+        } catch (error) {
+            return Promise.reject(error)
         }
-
-        // Create the new Event
-        let eventData = initData.event
-        let event = new Event(eventData.id, eventData.startDate, eventData.endDate)
-        let eventBuffer: Buffer = Buffer.from(JSON.stringify(event))
-
-        await ctx.stub.putState(`event-${event.id}`, eventBuffer)
-
-        // Create the elections
-        let electionList = initData.elections
-
-        electionList.forEach(async (elem) => {
-
-            let election = new Election(
-                elem.id, elem.eventId,
-                elem.electionType, elem.maxVotes
-            )
-
-            let electionBuffer: Buffer = Buffer.from(JSON.stringify(election))
-            await ctx.stub.putState(`election-${election.id}`, electionBuffer)
-        });
-
-        // Create the candidates
-        let candidateList = initData.candidates
-
-        candidateList.forEach(async (elem) => {
-
-            let candidate = new VotableItem(
-                elem.id, elem.electionId,
-                elem.firstName, elem.lastName,
-                elem.imageUrl
-            )
-
-            let candidateBuffer: Buffer = Buffer.from(JSON.stringify(candidate))
-            await ctx.stub.putState(`candidate-${candidate.id}`, candidateBuffer)
-        });
-
-        return true
     }
 
 
