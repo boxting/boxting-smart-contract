@@ -16,13 +16,13 @@ export class Voter {
     public type: string;
 
     @Property()
-    public votedElectionIds: String[];
+    public votedElectionIds: string;
 
     constructor(voterId: string, firstName: string, lastName: string) {
         this.id = voterId
         this.firstName = firstName
         this.lastName = lastName
-        this.votedElectionIds = []
+        this.votedElectionIds = ''
         this.type = 'voter'
     }
 

@@ -7,18 +7,18 @@ export class Event {
     public id: string;
 
     @Property()
-    public startDate: Date;
+    public startDate: string;
 
     @Property()
-    public endDate: Date;
+    public endDate: string;
 
     @Property()
     public type: string;
 
     constructor(eventId: string, startDate: string, endDate: string) {
         this.id = eventId
-        this.startDate = new Date(startDate)
-        this.endDate = new Date(endDate)
+        this.startDate = startDate
+        this.endDate = endDate
         this.type = 'event'
     }
 

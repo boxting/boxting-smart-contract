@@ -126,7 +126,7 @@ export class BoxtingContract extends Contract {
         }
 
         // Check if event has finished
-        const endDate = event.endDate
+        const endDate = new Date(event.endDate)
         const currentDate = Date.now()
 
         if (currentDate < endDate.getTime()) {
@@ -162,7 +162,7 @@ export class BoxtingContract extends Contract {
         }
 
         // Check if event has finished
-        const endDate = event.endDate
+        const endDate = new Date(event.endDate)
         const currentDate = Date.now()
 
         if (currentDate < endDate.getTime()) {
@@ -216,7 +216,8 @@ export class BoxtingContract extends Contract {
         const voterData: Uint8Array = await ctx.stub.getState(`voter-${voterId}`);
         const voter: Voter = JSON.parse(voterData.toString()) as Voter;
 
-        if (voter.votedElectionIds.length == 0) {
+        const votedElectionIds = JSON.parse(voter.votedElectionIds)
+        if (votedElectionIds.length == 0) {
             throw new Error(`The voter has not voted yet`);
         }
 
@@ -259,8 +260,8 @@ export class BoxtingContract extends Contract {
         const event = await this.validateInit(ctx)
 
         // Check if event is avaliable for voting
-        const endDate = event.endDate
-        const startDate = event.startDate
+        const endDate = new Date(event.endDate)
+        const startDate = new Date(event.startDate)
         const currentDate = Date.now()
 
         if (currentDate < startDate.getTime() || currentDate >= endDate.getTime()) {
@@ -288,7 +289,8 @@ export class BoxtingContract extends Contract {
         const voter: Voter = JSON.parse(voterData.toString()) as Voter
 
         // Check if the voter has already voted for this election
-        if (voter.votedElectionIds.indexOf(election.id) != -1) {
+        const votedElectionIds = JSON.parse(voter.votedElectionIds)
+        if (votedElectionIds.indexOf(election.id) != -1) {
             throw new Error(`The voter has already voted for the election ${election.id}`)
         }
 
@@ -323,14 +325,17 @@ export class BoxtingContract extends Contract {
 
         /* Vote Execution */
         // Update the voter voted elections with the election id
-        voter.votedElectionIds.push(election.id)
+        votedElectionIds.push(election.id)
+        voter.votedElectionIds = JSON.stringify(votedElectionIds)
+
         await ctx.stub.putState(`voter-${voter.id}`, Buffer.from(JSON.stringify(voter)))
 
+        const strVotables = JSON.stringify(votables)
         // Create new vote
         const vote: Vote = new Vote(
             voter.id,
             election.id,
-            votables
+            strVotables
         )
         await ctx.stub.putState(`vote-${vote.id}`, Buffer.from(JSON.stringify(vote)))
 
@@ -372,7 +377,8 @@ export class BoxtingContract extends Contract {
         const voter: Voter = JSON.parse(voterData.toString()) as Voter
 
         // Check if the voter has already voted for this election
-        if (voter.votedElectionIds.indexOf(election.id) != -1) {
+        const votedElectionIds = JSON.parse(voter.votedElectionIds)
+        if (votedElectionIds.indexOf(election.id) != -1) {
             return true
         }
         return false
