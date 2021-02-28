@@ -313,6 +313,11 @@ export class BoxtingContract extends Contract {
             }
 
             let votableItem = JSON.parse(data.toString()) as VotableItem
+
+            if (votableItem.electionId != electionId) {
+                throw new Error(`A candidate with the id ${votableIds[i]} does not belong to election ${electionId}`)
+            }
+
             votables.push(votableItem)
         }
 
