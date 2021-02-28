@@ -4,7 +4,8 @@ import { Event } from "./classes/event";
 import { VotableItem } from "./classes/votable-item";
 import { Vote } from "./classes/vote";
 import { Voter } from "./classes/voter";
-import { InitData, VoterData, JsonResponse } from "./interfaces/interfaces";
+import { BadRequestError } from "./error/bad.request.error";
+import { InitData, VoterData, JsonResponse, Result } from "./interfaces/interfaces";
 
 @Info({ title: 'BoxtingContract', description: 'Smart contract for boxting voting solution.' })
 export class BoxtingContract extends Contract {
@@ -18,8 +19,8 @@ export class BoxtingContract extends Contract {
      * @returns {boolean} true if the init is successfully accomplished
      */
     @Transaction()
-    @Returns('boolean')
-    public async initContract(ctx: Context, initDataStr: string): Promise<boolean> {
+    @Returns('Result')
+    public async initContract(ctx: Context, initDataStr: string): Promise<Result> {
         try {
             console.log('Init contract method called')
 
@@ -29,7 +30,10 @@ export class BoxtingContract extends Contract {
             const existingEvent: Event[] = JSON.parse(await this.queryByObjectType(ctx, 'event'));
 
             if (existingEvent && existingEvent.length > 0) {
-                throw new Error('The boxting contract has already been initiated');
+                return {
+                    success: false,
+                    error: new BadRequestError(10001, 'The boxting contract has already been initiated')
+                }
             }
 
             // Create the new Event
@@ -70,9 +74,9 @@ export class BoxtingContract extends Contract {
                 await ctx.stub.putState(`candidate-${candidate.id}`, candidateBuffer)
             }
 
-            return Promise.resolve(true)
+            return { success: true, data: 'Init completed' }
         } catch (error) {
-            return Promise.reject(error)
+            return { success: false, error: error }
         }
     }
 

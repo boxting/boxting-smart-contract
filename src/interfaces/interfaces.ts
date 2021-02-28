@@ -35,3 +35,9 @@ export interface JsonResponse {
     key?: string
     record?: any
 }
+
+export interface Result {
+    success: boolean,
+    data?: {} | string,
+    error?: {} | string
+}
