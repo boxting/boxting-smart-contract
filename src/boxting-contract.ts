@@ -505,6 +505,7 @@ export class BoxtingContract extends Contract {
 
             console.info('Put state new vote.')
             const strVotables = JSON.stringify(votables)
+
             // Create new vote
             const vote: Vote = new Vote(
                 voter.id,
@@ -512,6 +513,17 @@ export class BoxtingContract extends Contract {
                 strVotables
             )
             await ctx.stub.putState(`vote-${vote.id}`, Buffer.from(JSON.stringify(vote)))
+
+            console.info('Update votables counters')
+            for (let i = 0; i < votables.length; i++) {
+                const element = votables[i];
+
+                console.info('Increase votable counter')
+                element.voteCount += 1
+
+                console.info('Update votable object')
+                await ctx.stub.putState(`candidate-${element.id}`, Buffer.from(JSON.stringify(element)))
+            }
 
             console.info('Emit vote completed successfully.')
             return { success: true, data: 'Vote emited!' }
