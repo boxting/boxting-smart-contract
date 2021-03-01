@@ -514,7 +514,7 @@ export class BoxtingContract extends Contract {
             await ctx.stub.putState(`vote-${vote.id}`, Buffer.from(JSON.stringify(vote)))
 
             console.info('Emit vote completed successfully.')
-            return { success: false, data: 'Vote emited!' }
+            return { success: true, data: 'Vote emited!' }
         } catch (error) {
             console.error(`Something went wrong with the transaction: ${error}`)
             return { success: false, error: error }
