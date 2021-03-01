@@ -23,7 +23,7 @@ export class BoxtingContract extends Contract {
     @Returns('Result')
     public async initContract(ctx: Context, initDataStr: string): Promise<Result> {
         try {
-            console.log('Init contract method called')
+            console.info('Init contract method called.')
 
             const initData: InitData = JSON.parse(initDataStr)
 
@@ -31,6 +31,7 @@ export class BoxtingContract extends Contract {
             const existingEvent: Event[] = JSON.parse(await this.queryByObjectType(ctx, 'event'))
 
             if (existingEvent && existingEvent.length > 0) {
+                console.error('The boxting contract has already been initiated')
                 return {
                     success: false,
                     error: new BadRequestError(10001, 'The boxting contract has already been initiated')
@@ -77,6 +78,7 @@ export class BoxtingContract extends Contract {
 
             return { success: true, data: 'Init completed' }
         } catch (error) {
+            console.error(`Something went wrong with the transaction: ${error}`)
             return { success: false, error: error }
         }
     }
@@ -100,6 +102,8 @@ export class BoxtingContract extends Contract {
             const data: Uint8Array = await ctx.stub.getState(`voter-${voterData.id}`)
 
             if (!!data && data.length > 0) {
+                console.error(`A voter with the id ${voterData.id} already exists`)
+
                 return {
                     success: false,
                     error: new BadRequestError(10002, `A voter with the id ${voterData.id} already exists`)
@@ -113,6 +117,7 @@ export class BoxtingContract extends Contract {
 
             return { success: true, data: 'Creation completed' }
         } catch (error) {
+            console.error(`Something went wrong with the transaction: ${error}`)
             return { success: false, error: error }
         }
     }
@@ -138,6 +143,7 @@ export class BoxtingContract extends Contract {
             const exists: boolean = (!!data && data.length > 0)
 
             if (!exists) {
+                console.error(`A candidate with the id ${candidateId} does not exists`)
                 return {
                     success: false,
                     error: new NotFoundError(10003, `A candidate with the id ${candidateId} does not exists`)
@@ -149,6 +155,7 @@ export class BoxtingContract extends Contract {
             const currentDate = Date.now()
 
             if (currentDate < endDate.getTime()) {
+                console.error('The event has not finished yet, cannot get results')
                 return {
                     success: false,
                     error: new NotPermittedError(10004, 'The event has not finished yet, cannot get results')
@@ -159,6 +166,7 @@ export class BoxtingContract extends Contract {
 
             return { success: true, data: candidate }
         } catch (error) {
+            console.error(`Something went wrong with the transaction: ${error}`)
             return { success: false, error: error }
         }
     }
@@ -183,6 +191,7 @@ export class BoxtingContract extends Contract {
             const electionExists: boolean = await this.checkIfExists(ctx, `election-${electionId}`)
 
             if (!electionExists) {
+                console.error(`The election ${electionId} does not exists`)
                 return {
                     success: false,
                     error: new NotFoundError(10005, `The election ${electionId} does not exists`)
@@ -194,6 +203,7 @@ export class BoxtingContract extends Contract {
             const currentDate = Date.now()
 
             if (currentDate < endDate.getTime()) {
+                console.error('The event has not finished yet, cannot get results')
                 return {
                     success: false,
                     error: new NotPermittedError(10004, 'The event has not finished yet, cannot get results')
@@ -214,6 +224,7 @@ export class BoxtingContract extends Contract {
 
             return { success: true, data: candidates }
         } catch (error) {
+            console.error(`Something went wrong with the transaction: ${error}`)
             return { success: false, error: error }
         }
     }
@@ -238,6 +249,7 @@ export class BoxtingContract extends Contract {
             // Check if election with the id exists
             const electionExist: boolean = await this.checkIfExists(ctx, `election-${electionId}`)
             if (!electionExist) {
+                console.error(`The election ${electionId} does not exists`)
                 return {
                     success: false,
                     error: new NotFoundError(10005, `The election ${electionId} does not exists`)
@@ -247,6 +259,7 @@ export class BoxtingContract extends Contract {
             // Check if voter with the id exists
             const voterExist: boolean = await this.checkIfExists(ctx, `voter-${voterId}`)
             if (!voterExist) {
+                console.error(`The voter ${voterId} does not exists`)
                 return {
                     success: false,
                     error: new NotFoundError(10006, `The voter ${voterId} does not exists`)
@@ -259,6 +272,7 @@ export class BoxtingContract extends Contract {
 
             const votedElectionIds = JSON.parse(voter.votedElectionIds)
             if (votedElectionIds.length == 0) {
+                console.error('The voter has not voted yet.')
                 return {
                     success: false,
                     error: new BadRequestError(10007, 'The voter has not voted yet.')
@@ -280,6 +294,7 @@ export class BoxtingContract extends Contract {
             const votes: Vote[] = JSON.parse(queryResults)
 
             if (!votes || votes.length == 0) {
+                console.error('The voter has not voted yet on this election.')
                 return {
                     success: false,
                     error: new BadRequestError(10007, 'The voter has not voted yet on this election.')
@@ -288,6 +303,7 @@ export class BoxtingContract extends Contract {
 
             return { success: true, data: votes[0] }
         } catch (error) {
+            console.error(`Something went wrong with the transaction: ${error}`)
             return { success: false, error: error }
         }
     }
@@ -315,6 +331,7 @@ export class BoxtingContract extends Contract {
             const currentDate = Date.now()
 
             if (currentDate < startDate.getTime() || currentDate >= endDate.getTime()) {
+                console.error('The event is not avaliable for voting')
                 return {
                     success: false,
                     error: new NotPermittedError(10008, 'The event is not avaliable for voting')
@@ -326,6 +343,7 @@ export class BoxtingContract extends Contract {
             const electionExist: boolean = (!!electionData && electionData.length > 0)
 
             if (!electionExist) {
+                console.error(`The election ${electionId} does not exists`)
                 return {
                     success: false,
                     error: new NotFoundError(10005, `The election ${electionId} does not exists`)
@@ -337,6 +355,7 @@ export class BoxtingContract extends Contract {
             const voterExist = (!!voterData && voterData.length > 0)
 
             if (!voterExist) {
+                console.error(`The voter ${voterId} does not exists`)
                 return {
                     success: false,
                     error: new NotFoundError(10006, `The voter ${voterId} does not exists`)
@@ -350,6 +369,7 @@ export class BoxtingContract extends Contract {
             // Check if the voter has already voted for this election
             const votedElectionIds = JSON.parse(voter.votedElectionIds)
             if (votedElectionIds.indexOf(election.id) != -1) {
+                console.error(`The voter has already voted for the election ${election.id}`)
                 return {
                     success: false,
                     error: new NotPermittedError(10009, `The voter has already voted for the election ${election.id}`)
@@ -361,10 +381,11 @@ export class BoxtingContract extends Contract {
 
             // Check if sent candidates are the same as max candidates
             if (votableIds.length != election.maxVotes) {
+                console.error('The number of candidates sent is not the same as the required for the election')
                 return {
                     success: false,
                     error: new BadRequestError(10010,
-                        `The number of candidates sent is not the same as the required for the election`)
+                        'The number of candidates sent is not the same as the required for the election')
                 }
             }
 
@@ -377,6 +398,7 @@ export class BoxtingContract extends Contract {
                 const exists: boolean = (!!data && data.length > 0)
 
                 if (!exists) {
+                    console.error(`A candidate with the id ${votableIds[i]} does not exists`)
                     return {
                         success: false,
                         error: new NotFoundError(10003, `A candidate with the id ${votableIds[i]} does not exists`)
@@ -386,6 +408,7 @@ export class BoxtingContract extends Contract {
                 let votableItem = JSON.parse(data.toString()) as VotableItem
 
                 if (votableItem.electionId != electionId) {
+                    console.error(`A candidate with the id ${votableIds[i]} does not belong to election ${electionId}`)
                     return {
                         success: false,
                         error: new BadRequestError(10011,
@@ -414,6 +437,7 @@ export class BoxtingContract extends Contract {
 
             return { success: false, data: 'Vote emited!' }
         } catch (error) {
+            console.error(`Something went wrong with the transaction: ${error}`)
             return { success: false, error: error }
         }
     }
@@ -437,6 +461,7 @@ export class BoxtingContract extends Contract {
             const electionExist: boolean = (!!electionData && electionData.length > 0)
 
             if (!electionExist) {
+                console.error(`The election ${electionId} does not exists`)
                 return {
                     success: false,
                     error: new NotFoundError(10005, `The election ${electionId} does not exists`)
@@ -448,6 +473,7 @@ export class BoxtingContract extends Contract {
             const voterExist = (!!voterData && voterData.length > 0)
 
             if (!voterExist) {
+                console.error(`The voter ${voterId} does not exists`)
                 return {
                     success: false,
                     error: new NotFoundError(10006, `The voter ${voterId} does not exists`)
@@ -466,6 +492,7 @@ export class BoxtingContract extends Contract {
             }
             return { success: true, data: false }
         } catch (error) {
+            console.error(`Something went wrong with the transaction: ${error}`)
             return { success: false, error: error }
         }
     }
