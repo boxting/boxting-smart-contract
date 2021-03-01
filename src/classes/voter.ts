@@ -22,7 +22,7 @@ export class Voter {
         this.id = voterId
         this.firstName = firstName
         this.lastName = lastName
-        this.votedElectionIds = ''
+        this.votedElectionIds = '[]'
         this.type = 'voter'
     }
 
