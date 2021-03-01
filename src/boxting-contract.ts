@@ -633,7 +633,7 @@ export class BoxtingContract extends Contract {
                     jsonRes.record = res.value.value.toString()
                 }
 
-                allResults.push(jsonRes)
+                allResults.push(jsonRes.record)
             }
 
             if (res.done) {
