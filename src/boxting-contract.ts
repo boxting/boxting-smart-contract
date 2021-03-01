@@ -99,6 +99,30 @@ export class BoxtingContract extends Contract {
 
 
     /**
+     * Transaction to check if a voter is already registered
+     * 
+     * @param {Context} ctx the transaction context 
+     * @param {string} voterId the id of the voter
+     */
+    @Transaction(false)
+    @Returns('Result')
+    public async checkIfVoterExist(ctx: Context, voterId: string): Promise<Result> {
+
+        console.info('Check if voter exist method called.')
+
+        try {
+            const voterExist = this.checkIfExists(ctx, `voter-${voterId}`)
+
+            console.info('Check if voter exist completed successfully.')
+            return { success: true, data: voterExist }
+        } catch (error) {
+            console.error(`Something went wrong with the transaction: ${error}`)
+            return { success: false, error: error }
+        }
+    }
+
+
+    /**
      * Creates a new user for the contract
      * 
      * @param {Context} ctx the transaction context
