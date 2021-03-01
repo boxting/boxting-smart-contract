@@ -111,7 +111,7 @@ export class BoxtingContract extends Contract {
         console.info('Check if voter exist method called.')
 
         try {
-            const voterExist = this.checkIfExists(ctx, `voter-${voterId}`)
+            const voterExist = await this.checkIfExists(ctx, `voter-${voterId}`)
 
             console.info('Check if voter exist completed successfully.')
             return { success: true, data: voterExist }
