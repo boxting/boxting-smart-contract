@@ -359,10 +359,7 @@ export class BoxtingContract extends Contract {
 
             if (!votes || votes.length == 0) {
                 console.error('The voter has not voted yet on this election.')
-                return {
-                    success: false,
-                    error: new BadRequestError(10007, 'The voter has not voted yet on this election.')
-                }
+                return { success: true, data: undefined }
             }
 
             console.info('Read vote completed successfully.')
