@@ -541,24 +541,11 @@ export class BoxtingContract extends Contract {
      */
     @Transaction(false)
     @Returns('Result')
-    public async checkVoteElection(ctx: Context, electionId: string, voterId: string): Promise<Result> {
+    public async getVotedElections(ctx: Context, voterId: string): Promise<Result> {
 
         console.info('Check voted election method called.')
 
         try {
-            // Check if election exist
-            console.info(`Check if election with id election-${electionId} exists.`)
-            const electionData: Uint8Array = await ctx.stub.getState(`election-${electionId}`)
-            const electionExist: boolean = (!!electionData && electionData.length > 0)
-
-            if (!electionExist) {
-                console.error(`The election ${electionId} does not exists`)
-                return {
-                    success: false,
-                    error: new NotFoundError(10005, `The election ${electionId} does not exists`)
-                }
-            }
-
             // Check if voter exist
             console.info(`Check if voter with id voter-${voterId} exists.`)
             const voterData: Uint8Array = await ctx.stub.getState(`voter-${voterId}`)
@@ -566,28 +553,18 @@ export class BoxtingContract extends Contract {
 
             if (!voterExist) {
                 console.error(`The voter ${voterId} does not exists`)
-                return {
-                    success: false,
-                    error: new NotFoundError(10006, `The voter ${voterId} does not exists`)
-                }
+                return { success: true, data: [] }
             }
 
             // Get the election and voter
-            console.info('Parse election and voter obtained data.')
-            const election: Election = JSON.parse(electionData.toString()) as Election
+            console.info('Parse voter obtained data.')
             const voter: Voter = JSON.parse(voterData.toString()) as Voter
 
             // Check if the voter has already voted for this election
-            console.info('Validate if user has already voted for the election.')
+            console.info('Get user voted elections.')
             const votedElectionIds = JSON.parse(voter.votedElectionIds)
 
-            if (votedElectionIds.indexOf(election.id) != -1) {
-                console.info('Voter already voted.')
-                return { success: true, data: true }
-            }
-
-            console.info('Voter has not voted yet.')
-            return { success: true, data: false }
+            return { success: true, data: votedElectionIds }
         } catch (error) {
             console.error(`Something went wrong with the transaction: ${error}`)
             return { success: false, error: error }
