@@ -270,6 +270,9 @@ export class BoxtingContract extends Contract {
                 }
             }
 
+            // Get total votes count
+            const totalVotes: Vote[] = JSON.parse(await this.queryByObjectType(ctx, 'vote'))
+
             // Create query to get the candidates
             const queryString = {
                 selector: {
@@ -289,7 +292,8 @@ export class BoxtingContract extends Contract {
                     id: election.id,
                     name: election.name
                 },
-                candidates: candidates
+                candidates: candidates,
+                totalVotes: totalVotes.length
             }
             return { success: true, data: resultData }
         } catch (error) {
