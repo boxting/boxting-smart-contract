@@ -60,7 +60,7 @@ export class BoxtingContract extends Contract {
                 console.info('Convert data from election to buffer.')
                 let election = new Election(
                     elem.id, elem.eventId,
-                    elem.electionType, elem.maxVotes
+                    elem.electionType, elem.maxVotes, elem.name
                 )
 
                 let electionBuffer: Buffer = Buffer.from(JSON.stringify(election))

@@ -7,6 +7,9 @@ export class Election {
     public id: string;
 
     @Property()
+    public name: string;
+
+    @Property()
     public eventId: string;
 
     @Property()
@@ -18,12 +21,13 @@ export class Election {
     @Property()
     public maxVotes: number;
 
-    constructor(electionId: string, eventId: string, electionType: string, maxVotes: number) {
+    constructor(electionId: string, eventId: string, electionType: string, maxVotes: number, name: string) {
         this.id = electionId
         this.eventId = eventId
         this.electionType = electionType
         this.maxVotes = maxVotes
         this.type = 'election'
+        this.name = name
     }
 
 }
