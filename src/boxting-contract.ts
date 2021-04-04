@@ -242,7 +242,8 @@ export class BoxtingContract extends Contract {
 
             // Check if election exists
             console.info(`Check if election with id election-${electionId} exists.`)
-            const electionExists: boolean = await this.checkIfExists(ctx, `election-${electionId}`)
+            const electionData: Uint8Array = await ctx.stub.getState(`election-${electionId}`)
+            const electionExists: boolean = (!!electionData && electionData.length > 0)
 
             if (!electionExists) {
                 console.error(`The election ${electionId} does not exists`)
@@ -251,6 +252,10 @@ export class BoxtingContract extends Contract {
                     error: new NotFoundError(10005, `The election ${electionId} does not exists`)
                 }
             }
+
+            // Parse obtained election
+            console.info('Parse voter obtained data.')
+            const election: Election = JSON.parse(electionData.toString()) as Election
 
             // Check if event has finished
             console.info('Check if event has finished.')
@@ -279,7 +284,14 @@ export class BoxtingContract extends Contract {
             const candidates: VotableItem[] = JSON.parse(queryRes)
 
             console.info('Get election results completed successfully.')
-            return { success: true, data: candidates }
+            const resultData = {
+                election: {
+                    id: election.id,
+                    name: election.name
+                },
+                candidates: candidates
+            }
+            return { success: true, data: resultData }
         } catch (error) {
             console.error(`Something went wrong with the transaction: ${error}`)
             return { success: false, error: error }
@@ -307,14 +319,20 @@ export class BoxtingContract extends Contract {
 
             // Check if election with the id exists
             console.info(`Check if election with id election-${electionId} exists.`)
-            const electionExist: boolean = await this.checkIfExists(ctx, `election-${electionId}`)
-            if (!electionExist) {
+            const electionData: Uint8Array = await ctx.stub.getState(`election-${electionId}`)
+            const electionExists: boolean = (!!electionData && electionData.length > 0)
+
+            if (!electionExists) {
                 console.error(`The election ${electionId} does not exists`)
                 return {
                     success: false,
                     error: new NotFoundError(10005, `The election ${electionId} does not exists`)
                 }
             }
+
+            // Parse obtained election
+            console.info('Parse voter obtained data.')
+            const election: Election = JSON.parse(electionData.toString()) as Election
 
             // Check if voter with the id exists
             console.info(`Check if voter with id voter-${voterId} exists.`)
@@ -363,7 +381,14 @@ export class BoxtingContract extends Contract {
             }
 
             console.info('Read vote completed successfully.')
-            return { success: true, data: votes[0] }
+            const resultData = {
+                election: {
+                    id: election.id,
+                    name: election.name
+                },
+                vote: votes[0]
+            }
+            return { success: true, data: resultData }
         } catch (error) {
             console.error(`Something went wrong with the transaction: ${error}`)
             return { success: false, error: error }
