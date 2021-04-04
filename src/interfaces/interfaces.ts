@@ -16,7 +16,7 @@ export interface ElectionData {
     id: string
     eventId: string
     electionType: 'single' | 'multiple'
-    maxVotes: number,
+    maxVotes: number
     name: string
 }
 
