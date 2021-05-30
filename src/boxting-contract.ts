@@ -257,7 +257,7 @@ export class BoxtingContract extends Contract {
             console.info('Parse voter obtained data.')
             const election: Election = JSON.parse(electionData.toString()) as Election
 
-            // Check if event has finished
+            /* // Check if event has finished
             console.info('Check if event has finished.')
             const endDate = new Date(event.endDate)
             const currentDate = Date.now()
@@ -268,7 +268,7 @@ export class BoxtingContract extends Contract {
                     success: false,
                     error: new NotPermittedError(10004, 'The event has not finished yet, cannot get results')
                 }
-            }
+            } */
 
             // Create query to get the votes
             const queryVotes = {
